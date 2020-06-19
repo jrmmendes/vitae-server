@@ -25,6 +25,7 @@ export class AccountsService {
     return this.userModel.create({
       name: user.name,
       email: user.email,
+      isActive: false,
       passwordHash,
     });
   }
