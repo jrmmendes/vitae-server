@@ -3,8 +3,7 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({
   versionKey: false,
-  id: true,
-  _id: false,
+  timestamps: true,
 })
 export class User extends Document {
   @Prop()
