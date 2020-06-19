@@ -29,7 +29,7 @@ When I see the **201 Created**, I also want to see the respones body with the us
 {
   "name": "Junior Mendes",
   "email": "jm@test.com",
-  "password": "m3$3jdiii32-asdasd"
+  "password": "m3$3jdiii32-asdasd",
   "passwordConfirmation": "m3$3jdiii32-asdasd"
 }
 ```
