@@ -6,9 +6,11 @@ import { Test } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AccountsModule } from '../src/accounts/accounts.module';
+import { AccountsService } from '../src/accounts/accounts.service';
 
 describe('Accounts', () => {
   let app: INestApplication;
+  let service: AccountsService;
 
   beforeAll(async (done) => {
     const module = await Test.createTestingModule({
@@ -27,11 +29,13 @@ describe('Accounts', () => {
     }).compile();
 
     app = module.createNestApplication();
+    service = module.get<AccountsService>(AccountsService);
+
     await app.init();
     done();
   });
 
-  it('/POST users', async (done) => {
+  it('When POST /users with valid data, expect 201 with registered user data', async (done) => {
     const server = app.getHttpServer();
     const response = await request(server)
     .post('/users')
@@ -54,6 +58,27 @@ describe('Accounts', () => {
 
     expect(response.body.isActive).toBe(false);
     done();
+  });
+
+  it('When POST /users/activation?token={validToken}, expect the account to be activated', async (done) => {
+    const server = app.getHttpServer();
+
+    const testUser = await service.registerUser({
+      name: faker.name.findName(),
+      email: faker.internet.email(),
+      password: "m3$3jdiii32-asdasd",
+      passwordConfirmation: "m3$3jdiii32-asdasd",
+    });
+
+    const token = service.getActivationToken(testUser._id);
+
+    const response = await request(server)
+    .get(`/users/activation?token=${token}`)
+    .send();
+
+    expect(response.status).toBe(200);
+    done();
+
   });
 
   afterAll(async () => {
