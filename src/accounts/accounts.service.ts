@@ -5,12 +5,29 @@ import { Model } from 'mongoose';
 
 import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
+import {ActivationToken} from './schemas/token.schema';
 
 @Injectable()
 export class AccountsService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>,
+    
+    @InjectModel(ActivationToken.name)
+    private readonly activationTokenModel: Model<ActivationToken>,
   ) {}
+
+  async getActivationToken(userId: number): Promise<ActivationToken> {
+    const user = await this
+      .userModel
+      .findById(userId);
+    
+    const tokenValue = await hash(`${user.name}${user.email}${Date.now()}`, 10);
+
+    return this
+      .activationTokenModel
+      .create({ value: tokenValue });
+  }
 
   async registerUser(user: RegisterUserDto): Promise<User> {
     if (await this.userModel.exists({ email: user.email })) {

@@ -7,10 +7,12 @@ import { BadRequestException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { ActivationToken } from './schemas/token.schema';
 
 describe('AccountsService', () => {
   let service: AccountsService;
-  let model: Model<User>;
+  let userModel: Model<User>;
+  let activationTokenModel: Model<ActivationToken>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,12 +25,20 @@ describe('AccountsService', () => {
             create: jest.fn(),
             findById: jest.fn(),
           }
+        },
+        {
+          provide: getModelToken('ActivationToken'),
+          useValue: {
+            exists: jest.fn(),
+            create: jest.fn(),
+          }
         }
       ]
     }).compile();
 
     service = module.get<AccountsService>(AccountsService);
-    model = module.get<Model<User>>(getModelToken('User'));
+    userModel = module.get<Model<User>>(getModelToken('User'));
+    activationTokenModel = module.get<Model<ActivationToken>>(getModelToken('ActivationToken'));
   });
 
   it('should be defined', () => {
@@ -57,13 +67,13 @@ describe('AccountsService', () => {
         updatedAt: (new Date()).toISOString(),
       };
 
-      jest.spyOn(model, 'exists').mockResolvedValue(false);
-      jest.spyOn(model, 'create').mockResolvedValue(createdUser as any);
+      jest.spyOn(userModel, 'exists').mockResolvedValue(false);
+      jest.spyOn(userModel, 'create').mockResolvedValue(createdUser as any);
 
       const user = await service.registerUser(data);
 
       expect(user).toBeDefined();
-      expect(model.create).toBeCalledWith({
+      expect(userModel.create).toBeCalledWith({
         name: expect.any(String),
         email: expect.any(String),
         isActive: false,
@@ -87,12 +97,11 @@ describe('AccountsService', () => {
         passwordConfirmation: faker.internet.password(13),
       };
 
-      jest.spyOn(model, 'exists').mockResolvedValue(true);
+      jest.spyOn(userModel, 'exists').mockResolvedValue(true);
 
       await expect(service.registerUser(invalidData))
         .rejects
         .toThrowError(new BadRequestException('That email is not available'))
-
     });
 
     it('When passwords are different, expect to throw 400 BadRequest', async () => {
@@ -103,12 +112,49 @@ describe('AccountsService', () => {
         passwordConfirmation: faker.internet.password(15),
       };
 
-      jest.spyOn(model, 'exists').mockResolvedValue(false);
+      jest.spyOn(userModel, 'exists').mockResolvedValue(false);
 
       await expect(service.registerUser(invalidData))
         .rejects
         .toThrowError(new BadRequestException('The passwords must be equal'))
-      expect(model.create).not.toBeCalled();
+      expect(userModel.create).not.toBeCalled();
+    });
+  });
+
+  describe('Activation Token Generation', () => {
+    it('When the passed users exists, expect to return a valid activation token', async (done) => {
+      const testUser = {
+        _id: faker.random.alphaNumeric(13),
+        name: faker.name.findName(),
+        email: faker.internet.email(),
+        isActive: false,
+      } as User;
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockResolvedValue(testUser);
+
+      jest
+        .spyOn(activationTokenModel, 'create')
+        .mockImplementation((tokenOpts: ActivationToken) => new Promise(
+          resolve => resolve({
+            _id: faker.random.alphaNumeric(12),
+            value: tokenOpts.value,
+            hasBeenUsed: false,
+            createdAt: (new Date()).toISOString(),
+            updatedAt: (new Date()).toISOString(),
+          } as any),
+        ));
+
+      const { value, hasBeenUsed } = await service
+        .getActivationToken(testUser._id);
+
+      expect({ value, hasBeenUsed })
+        .toMatchObject({ 
+        value: expect.any(String),
+        hasBeenUsed: false,
+      });
+      done();
     });
   });
 });
