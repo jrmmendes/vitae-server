@@ -4,10 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 
 import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdtapter } from '@nestjs-modules/mailer/lib/adapters/handlebars.adapter';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AccountsModule } from './accounts/accounts.module';
 
 @Module({
@@ -31,7 +29,7 @@ import { AccountsModule } from './accounts/accounts.module';
         },
         template: {
           dir: join(process.cwd(), 'templates'),
-          adapter: new HandlebarsAdtapter(),
+          adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
           },
@@ -39,7 +37,5 @@ import { AccountsModule } from './accounts/accounts.module';
       }
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
