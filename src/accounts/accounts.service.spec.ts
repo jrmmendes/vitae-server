@@ -5,11 +5,11 @@ import * as faker from 'faker/locale/pt_BR';
 import { BadRequestException } from '@nestjs/common';
 
 import { AccountsService } from './accounts.service';
-import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { User } from './schemas/user.schema';
 import { ActivationToken } from './schemas/token.schema';
 
-describe('AccountsService', () => {
+describe('Accounts Service', () => {
   let service: AccountsService;
   let userModel: Model<User>;
   let activationTokenModel: Model<ActivationToken>;
@@ -31,6 +31,7 @@ describe('AccountsService', () => {
           useValue: {
             exists: jest.fn(),
             create: jest.fn(),
+            findOne: jest.fn(),
           }
         }
       ]
@@ -118,6 +119,45 @@ describe('AccountsService', () => {
         .rejects
         .toThrowError(new BadRequestException('The passwords must be equal'))
       expect(userModel.create).not.toBeCalled();
+    });
+  });
+
+  describe('User Activation', () => {
+    it('When valid token is passed, expect to activate the user and mark token as used', async (done) => {
+      const testUser = {
+        _id: faker.random.alphaNumeric(13),
+        name: faker.name.findName(),
+        email: faker.internet.email(),
+        isActive: false,
+      } as User;
+
+      const testActivationToken = {
+        _id: faker.random.alphaNumeric(13),
+        value: faker.random.alphaNumeric(13),
+        hasBeenUsed: false,
+      } as ActivationToken;
+
+      testActivationToken.save = jest.fn();
+      testUser.save = jest.fn();
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockResolvedValue(testUser);
+
+      jest
+        .spyOn(activationTokenModel, 'findOne')
+        .mockResolvedValue(testActivationToken);
+
+      await service.activateUser({
+        tokenValue: testActivationToken.value,
+      });
+
+      expect(testUser.save).toBeCalled();
+      expect(testActivationToken.save).toBeCalled();
+      expect(testActivationToken.hasBeenUsed).toBe(true);
+      expect(testUser.isActive).toBe(true);
+      
+      done();
     });
   });
 

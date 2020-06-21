@@ -1,11 +1,15 @@
 import { hash } from 'bcryptjs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
-import {ActivationToken} from './schemas/token.schema';
+import { ActivationToken } from './schemas/token.schema';
+
+type ActivateUserParams = {
+  tokenValue: string;
+};
 
 @Injectable()
 export class AccountsService {
@@ -17,6 +21,30 @@ export class AccountsService {
     private readonly activationTokenModel: Model<ActivationToken>,
   ) {}
 
+  async activateUser({ tokenValue }: ActivateUserParams ): Promise<void> {
+    const token = await this.activationTokenModel.findOne({ value: tokenValue });
+
+    if (!token) {
+      throw new NotFoundException('The token could not be found');
+    }
+    
+    if (token.hasBeenUsed) {
+      throw new UnprocessableEntityException('That token has already been used');
+    }
+    
+    const user = await this.userModel.findById(token.userId);
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isActive = true;
+    token.hasBeenUsed = true;
+    
+    await token.save();
+    await user.save();
+  }
+
   async getActivationToken(userId: number): Promise<ActivationToken> {
     const user = await this
       .userModel
@@ -26,7 +54,10 @@ export class AccountsService {
 
     return this
       .activationTokenModel
-      .create({ value: tokenValue });
+      .create({
+        value: tokenValue,
+        userId: user.id,
+      });
   }
 
   async registerUser(user: RegisterUserDto): Promise<User> {
