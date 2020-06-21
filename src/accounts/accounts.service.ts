@@ -1,5 +1,5 @@
 import { hash } from 'bcryptjs';
-import { Injectable, BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
@@ -25,11 +25,11 @@ export class AccountsService {
     const token = await this.activationTokenModel.findOne({ value: tokenValue });
 
     if (!token) {
-      throw new NotFoundException('The token could not be found');
+      throw new BadRequestException('That token is not valid');
     }
     
     if (token.hasBeenUsed) {
-      throw new UnprocessableEntityException('That token has already been used');
+      throw new BadRequestException('That token has already been used');
     }
     
     const user = await this.userModel.findById(token.userId);

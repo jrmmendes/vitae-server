@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as faker from 'faker/locale/pt_BR';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { AccountsService } from './accounts.service';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -123,6 +123,98 @@ describe('Accounts Service', () => {
   });
 
   describe('User Activation', () => {
+    it('When the userId has a invalid field, expect to throw Not Found exception', async (done) => {
+
+      const testToken = {
+        _id: faker.random.alphaNumeric(13),
+        value: faker.random.alphaNumeric(13),
+        hasBeenUsed: false,
+      } as ActivationToken;
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockResolvedValue(undefined);
+
+      jest
+        .spyOn(activationTokenModel, 'findOne')
+        .mockResolvedValue(testToken);
+
+
+      await expect(service.activateUser({
+        tokenValue: testToken.value,
+      }))
+        .rejects
+        .toThrowError(new NotFoundException('User not found'));
+
+      done();
+    });
+
+    it('When an invalid token is passed, expect to throw Bad Request exception', async (done) => {
+      const testUser = {
+        _id: faker.random.alphaNumeric(13),
+        name: faker.name.findName(),
+        email: faker.internet.email(),
+        isActive: false,
+      } as User;
+
+      testUser.save = jest.fn();
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockResolvedValue(testUser);
+
+      jest
+        .spyOn(activationTokenModel, 'findOne')
+        .mockResolvedValue(undefined);
+
+      await expect(service.activateUser({
+        tokenValue: faker.random.alphaNumeric(13),
+      }))
+        .rejects
+        .toThrowError(new BadRequestException('That token is not valid'));
+
+      expect(testUser.save).not.toBeCalled();
+      expect(testUser.isActive).toBe(false);
+      
+      done();
+    });
+    it('When an already used token is passed, expect to throw Bad Request exception', async (done) => {
+      const testUser = {
+        _id: faker.random.alphaNumeric(13),
+        name: faker.name.findName(),
+        email: faker.internet.email(),
+        isActive: false,
+      } as User;
+
+      testUser.save = jest.fn();
+
+      const alreadyUsedToken = {
+        _id: faker.random.alphaNumeric(13),
+        value: faker.random.alphaNumeric(13),
+        hasBeenUsed: true,
+      } as ActivationToken;
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockResolvedValue(testUser);
+
+      jest
+        .spyOn(activationTokenModel, 'findOne')
+        .mockResolvedValue(alreadyUsedToken);
+
+
+      await expect(service.activateUser({
+        tokenValue: alreadyUsedToken.value,
+      }))
+        .rejects
+        .toThrowError(new BadRequestException('That token has already been used'));
+
+      expect(testUser.save).not.toBeCalled();
+      expect(testUser.isActive).toBe(false);
+      
+      done();
+    });
+
     it('When valid token is passed, expect to activate the user and mark token as used', async (done) => {
       const testUser = {
         _id: faker.random.alphaNumeric(13),
