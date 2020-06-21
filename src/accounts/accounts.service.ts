@@ -45,10 +45,21 @@ export class AccountsService {
     await user.save();
   }
 
-  async getActivationToken(userId: number): Promise<ActivationToken> {
+  async getActivationToken(userId: string): Promise<ActivationToken> {
+
+    const alreadyExistentToken = await this
+      .activationTokenModel
+      .findOne({ userId });
+
+    alreadyExistentToken?.deleteOne();
+
     const user = await this
       .userModel
       .findById(userId);
+
+    if(!user) {
+      throw new NotFoundException('User not found');
+    }
     
     const tokenValue = await hash(`${user.name}${user.email}${Date.now()}`, 10);
 
