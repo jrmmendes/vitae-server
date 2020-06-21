@@ -11,6 +11,9 @@ export class ActivationToken extends Document {
 
   @Prop({ default: false })
   hasBeenUsed?: boolean;
+
+  @Prop()
+  userId: string;
 }
 
 export const ActivationTokenSchema = SchemaFactory
