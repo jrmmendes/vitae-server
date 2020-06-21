@@ -1,7 +1,9 @@
-import { hash } from 'bcryptjs';
+import { hash, compare } from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ConfigService } from '@nestjs/config';
 
 import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -9,7 +11,12 @@ import { ActivationToken } from './schemas/token.schema';
 
 type ActivateUserParams = {
   tokenValue: string;
-};
+}
+
+type Credentials = {
+  email: string;
+  password: string;
+}
 
 @Injectable()
 export class AccountsService {
@@ -19,8 +26,28 @@ export class AccountsService {
     
     @InjectModel(ActivationToken.name)
     private readonly activationTokenModel: Model<ActivationToken>,
+
+    private readonly configService: ConfigService,
   ) {}
 
+  async getAuthorizationToken({ email, password }: Credentials): Promise<string> {
+    const user = await this.userModel.findOne({ email, isActive: true });
+    const hasValidCredentials = await compare(password, user?.passwordHash);
+    
+    if (!hasValidCredentials) {
+      throw new BadRequestException('Email or password is wrong');
+    }
+    
+    const secretOrPrivateKey = this
+      .configService
+      .get<string>('APP_SECRET');
+
+    return sign({
+      id: user.id,
+      loginAt: (new Date()).toISOString(),
+    }, secretOrPrivateKey);
+
+  }
   async activateUser({ tokenValue }: ActivateUserParams ): Promise<void> {
     const token = await this.activationTokenModel.findOne({ value: tokenValue });
 

@@ -1,3 +1,4 @@
+import { hash } from 'bcryptjs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,6 +9,7 @@ import { AccountsService } from './accounts.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from './schemas/user.schema';
 import { ActivationToken } from './schemas/token.schema';
+import {ConfigModule} from '@nestjs/config';
 
 describe('Accounts Service', () => {
   let service: AccountsService;
@@ -16,6 +18,11 @@ describe('Accounts Service', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+      ],
       providers: [
         AccountsService,
         {
@@ -24,6 +31,7 @@ describe('Accounts Service', () => {
             exists: jest.fn(),
             create: jest.fn(),
             findById: jest.fn(),
+            findOne: jest.fn(),
           }
         },
         {
@@ -362,6 +370,32 @@ describe('Accounts Service', () => {
         value: expect.any(String),
         hasBeenUsed: false,
       });
+      done();
+    });
+  });
+
+  describe('Account Login', () => {
+    it('When valid credentials are provided, expect to generate jwt token', async (done) => {
+      const testCredentials = {
+        email: faker.internet.email(),
+        password: faker.internet.password(12, false),
+      };
+
+      const passwordHash = await hash(testCredentials.password, 10);
+
+      jest.spyOn(userModel, 'findOne').mockResolvedValue({
+        _id: faker.random.alphaNumeric(),
+        name: faker.name.findName(),
+        email: testCredentials.email,
+        passwordHash,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+
+      const jwt = await service.getAuthorizationToken(testCredentials);
+
+      expect(jwt).toMatch(/^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/);
       done();
     });
   });
