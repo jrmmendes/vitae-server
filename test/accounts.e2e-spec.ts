@@ -4,6 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
 
 import { AccountsModule } from '../src/accounts/accounts.module';
 import { AccountsService } from '../src/accounts/accounts.service';
@@ -16,6 +17,9 @@ describe('Accounts', () => {
     const module = await Test.createTestingModule({
       imports: [
         AccountsModule,
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
         MongooseModule.forRootAsync({
           useFactory: async () => {
             const mongod = new MongoMemoryServer();
@@ -33,6 +37,40 @@ describe('Accounts', () => {
 
     await app.init();
     done();
+  });
+
+  it('When POST /users/login with valid credentials, expect 201 with a 30 days valid JWT', async (done) => {
+    const server = app.getHttpServer();
+
+    const testCredentials = {
+      email: faker.internet.email(),
+      password: "m3$3jdiii32-asdasd",
+    }
+
+    const testUser = await service.registerUser({
+      name: faker.name.findName(),
+      email: testCredentials.email,
+      password: testCredentials.password,
+      passwordConfirmation: testCredentials.password,
+    });
+
+    const activationToken = await service.getActivationToken(testUser._id);
+    await service.activateUser({ tokenValue: activationToken.value });
+
+    const response = await request(server)
+    .post('/users/login')
+    .send({
+      email: testCredentials.email,
+      password: testCredentials.password,
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      token: expect.any(String),
+    });
+
+    done();
+
   });
 
   it('When POST /users with valid data, expect 201 with registered user data', async (done) => {
