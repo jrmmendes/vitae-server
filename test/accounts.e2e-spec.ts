@@ -70,10 +70,10 @@ describe('Accounts', () => {
       passwordConfirmation: "m3$3jdiii32-asdasd",
     });
 
-    const token = service.getActivationToken(testUser._id);
+    const token = await service.getActivationToken(testUser._id);
 
     const response = await request(server)
-    .get(`/users/activation?token=${token}`)
+    .get(`/users/activation?token=${token.value}`)
     .send();
 
     expect(response.status).toBe(200);
