@@ -11,4 +11,4 @@ install:
 
 script:
   - yarn test
-  - yarn test:e2e
+  - yarn test:e2e --forceExit
