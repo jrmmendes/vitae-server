@@ -16,6 +16,13 @@ describe('Accounts Service', () => {
   let userModel: Model<User>;
   let activationTokenModel: Model<ActivationToken>;
 
+  const getTestUser = (): User => ({
+    _id: faker.random.alphaNumeric(13),
+    name: faker.name.findName(),
+    email: faker.internet.email(),
+    isActive: false,
+  }) as User;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -147,7 +154,6 @@ describe('Accounts Service', () => {
       .spyOn(activationTokenModel, 'findOne')
       .mockResolvedValue(testToken);
 
-
       await expect(service.activateUser({
         tokenValue: testToken.value,
       }))
@@ -158,13 +164,8 @@ describe('Accounts Service', () => {
     });
 
     it('When an invalid token is passed, expect to throw Bad Request exception', async (done) => {
-      const testUser = {
-        _id: faker.random.alphaNumeric(13),
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        isActive: false,
-      } as User;
 
+      const testUser = getTestUser();
       testUser.save = jest.fn();
 
       jest
@@ -187,12 +188,7 @@ describe('Accounts Service', () => {
       done();
     });
     it('When an already used token is passed, expect to throw Bad Request exception', async (done) => {
-      const testUser = {
-        _id: faker.random.alphaNumeric(13),
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        isActive: false,
-      } as User;
+      const testUser = getTestUser();
 
       testUser.save = jest.fn();
 
@@ -224,12 +220,7 @@ describe('Accounts Service', () => {
     });
 
     it('When valid token is passed, expect to activate the user and mark token as used', async (done) => {
-      const testUser = {
-        _id: faker.random.alphaNumeric(13),
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        isActive: false,
-      } as User;
+      const testUser = getTestUser();
 
       const testActivationToken = {
         _id: faker.random.alphaNumeric(13),
@@ -262,13 +253,20 @@ describe('Accounts Service', () => {
   });
 
   describe('Activation Token Generation', () => {
+
+    const getCreateImplementation = (): any => {
+      return (tokenOpts: ActivationToken) => new Promise(
+        resolve => resolve({
+          _id: faker.random.alphaNumeric(12),
+          value: tokenOpts.value,
+          hasBeenUsed: false,
+          createdAt: (new Date()).toISOString(),
+          updatedAt: (new Date()).toISOString(),
+        }));
+    }
+
     it('When there is another valid token, expect to delete it and create a new one', async (done) => {
-      const testUser = {
-        _id: faker.random.alphaNumeric(13),
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        isActive: false,
-      } as User;
+      const testUser = getTestUser();
 
       const alreadyExistentToken = {
         _id: faker.random.alphaNumeric(12),
@@ -286,15 +284,7 @@ describe('Accounts Service', () => {
 
       jest
       .spyOn(activationTokenModel, 'create')
-      .mockImplementation((tokenOpts: ActivationToken) => new Promise(
-        resolve => resolve({
-          _id: faker.random.alphaNumeric(12),
-          value: tokenOpts.value,
-          hasBeenUsed: false,
-          createdAt: (new Date()).toISOString(),
-          updatedAt: (new Date()).toISOString(),
-        } as any),
-      ));
+      .mockImplementation(getCreateImplementation());
 
       jest.spyOn(activationTokenModel, 'findOne').mockResolvedValue(alreadyExistentToken)
 
@@ -311,7 +301,6 @@ describe('Accounts Service', () => {
       expect(alreadyExistentToken.deleteOne).toBeCalled();
 
       done();
-      
     });
 
     it('When the user did not exists, expect to throw a not found error', async (done) => {
@@ -321,17 +310,11 @@ describe('Accounts Service', () => {
 
       jest
       .spyOn(activationTokenModel, 'create')
-      .mockImplementation((tokenOpts: ActivationToken) => new Promise(
-        resolve => resolve({
-          _id: faker.random.alphaNumeric(12),
-          value: tokenOpts.value,
-          hasBeenUsed: false,
-          createdAt: (new Date()).toISOString(),
-          updatedAt: (new Date()).toISOString(),
-        } as any),
-      ));
+      .mockImplementation(getCreateImplementation());
 
-      await expect(service.getActivationToken(faker.random.alphaNumeric(13)))
+      await expect(
+        service.getActivationToken(faker.random.alphaNumeric(13))
+      )
       .rejects
       .toThrowError(new NotFoundException('User not found'));
 
@@ -339,12 +322,7 @@ describe('Accounts Service', () => {
     });
 
     it('When the passed users exists, expect to return a valid activation token', async (done) => {
-      const testUser = {
-        _id: faker.random.alphaNumeric(13),
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        isActive: false,
-      } as User;
+      const testUser = getTestUser();
 
       jest
       .spyOn(userModel, 'findById')
@@ -352,15 +330,7 @@ describe('Accounts Service', () => {
 
       jest
       .spyOn(activationTokenModel, 'create')
-      .mockImplementation((tokenOpts: ActivationToken) => new Promise(
-        resolve => resolve({
-          _id: faker.random.alphaNumeric(12),
-          value: tokenOpts.value,
-          hasBeenUsed: false,
-          createdAt: (new Date()).toISOString(),
-          updatedAt: (new Date()).toISOString(),
-        } as any),
-      ));
+      .mockImplementation(getCreateImplementation());
 
       const { value, hasBeenUsed } = await service
       .getActivationToken(testUser._id);

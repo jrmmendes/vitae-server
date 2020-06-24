@@ -12,6 +12,7 @@ import { AccountsService } from '../src/accounts/accounts.service';
 describe('Accounts', () => {
   let app: INestApplication;
   let service: AccountsService;
+  let validTestUserData: any;
 
   beforeAll(async (done) => {
     const module = await Test.createTestingModule({
@@ -34,6 +35,13 @@ describe('Accounts', () => {
 
     app = module.createNestApplication();
     service = module.get<AccountsService>(AccountsService);
+
+    validTestUserData = () => ({
+      name: faker.name.findName(),
+      email: faker.internet.email(),
+      password: "m3$3jdiii32-asdasd",
+      passwordConfirmation: "m3$3jdiii32-asdasd",
+    });
 
     await app.init();
     done();
@@ -76,12 +84,7 @@ describe('Accounts', () => {
     const server = app.getHttpServer();
     const response = await request(server)
     .post('/users')
-    .send({
-      name: faker.name.findName(),
-      email: faker.internet.email(),
-      password: "m3$3jdiii32-asdasd",
-      passwordConfirmation: "m3$3jdiii32-asdasd",
-    });
+    .send(validTestUserData());
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
@@ -100,12 +103,7 @@ describe('Accounts', () => {
   it('When POST /users/activation?token={validToken}, expect the account to be activated', async (done) => {
     const server = app.getHttpServer();
 
-    const testUser = await service.registerUser({
-      name: faker.name.findName(),
-      email: faker.internet.email(),
-      password: "m3$3jdiii32-asdasd",
-      passwordConfirmation: "m3$3jdiii32-asdasd",
-    });
+    const testUser = await service.registerUser(validTestUserData());
 
     const token = await service.getActivationToken(testUser._id);
 
@@ -115,7 +113,6 @@ describe('Accounts', () => {
 
     expect(response.status).toBe(200);
     done();
-
   });
 
   afterAll(async () => {
