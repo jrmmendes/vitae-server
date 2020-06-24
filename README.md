@@ -1,4 +1,9 @@
-# Vitae Server
+<p align="center">
+  <img width="350px" src="https://raw.githubusercontent.com/jrmmendes/vitae-angular-client/main/docs/logo-vittae-colored.svg" alt="Vitae">
+</p>
+<h4 align="center"> Create amazing developer resumes. </h4>
+
+----
 <p align="center">
   <a href="https://travis-ci.org/jrmmendes/vitae-server">
     <img src="https://api.travis-ci.org/jrmmendes/vitae-server.svg?branch=main" alt="Travis" />
