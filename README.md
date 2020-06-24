@@ -1,8 +1,20 @@
-# Vitae Server
+<p align="center">
+  <img width="350px" src="https://raw.githubusercontent.com/jrmmendes/vitae-angular-client/main/docs/logo-vittae-colored.svg" alt="Vitae">
+</p>
+<h4 align="center"> Create amazing developer resumes. </h4>
 
-<a href="https://travis-ci.org/jrmmendes/vitae-server">
-  <img src="https://api.travis-ci.org/jrmmendes/vitae-server.svg?branch=main" alt="Travis" />
-</a>
+----
+<p align="center">
+  <a href="https://travis-ci.org/jrmmendes/vitae-server">
+    <img src="https://api.travis-ci.org/jrmmendes/vitae-server.svg?branch=main" alt="Travis" />
+  </a>
+  <a href="https://codeclimate.com/github/jrmmendes/vitae-server/test_coverage">
+    <img src="https://api.codeclimate.com/v1/badges/c448e6347be2fad9fc80/test_coverage" />
+  </a>
+  <a href="https://codeclimate.com/github/jrmmendes/vitae-server/maintainability">
+    <img src="https://api.codeclimate.com/v1/badges/c448e6347be2fad9fc80/maintainability" />
+  </a>
+</p>
 
 ## Description
 

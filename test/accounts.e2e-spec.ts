@@ -70,7 +70,6 @@ describe('Accounts', () => {
     });
 
     done();
-
   });
 
   it('When POST /users with valid data, expect 201 with registered user data', async (done) => {
