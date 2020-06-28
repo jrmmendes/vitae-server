@@ -17,5 +17,7 @@ after_script:
 - "./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT"
 deploy:
   provider: heroku
+  app: 
+    main: vitae-backend
   api_key:
     secure: JKM5Py3hyphasYmP9QP4iG4QKE/GCFq5WmnZZBPsThNMF5QAcQlSg1aXqJ00YNBUw8EA3yBIedVAyyNuLEjRzdpzVoOFUjbPQYF72m4ZOnf4C6he+JjbXY8SrUBcr2SQurjKpeddup9qsno6gqbeO/RrF16m3MGFynVYw371tQ2Xcz4SJGzb/b8KI6PzKTkMt/X5/npkpr6HL2SZI8h7P5BZ+Re3tbLiLNXJeW99KGOyvypRNVdYJG0+cOtK79rW1/uR431CzfSmiVQ+ubuXseDiNoiBDT9+cLQQJutAiDzjuccQmiSPkBYbnlaIRL7ekdegIEmC5d/41tvT2FlfoeNiCGqK//j2hGylvM9xlpFIBcXJ9NJaLNqa9jBqN8ydl0Ril0BHFiYE+87MCWzZ+z4qp+EWWmmEsF/ov4Zs9EF691b+quamhif6KYF7Qz54A/XpKHLpW3n09ro9PWQjjkJc/krTlP0mVLx9Gc4cHMdpho08Sk3pDO6kmkJySJ7+ik9MXedCVk70zsIBaVQ3JWz4Ln8TMfwQLjd4Z8WbLgPaVqpv+zTbQaDd0Xz/TwY1ctQvvnO4PrLzml93GWtkUOUHuZjgaiFD1na7BmGMfaMNo7IEDG6Kp3xysKXW+TGiIp4Q/+OXfBfq93Cbv8c+6rIMw80AXfMiKDrnCfq3fTg=
