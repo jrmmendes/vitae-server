@@ -10,6 +10,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   const options = new DocumentBuilder()
     .setTitle('Vitae API')
     .setDescription('The Vitae API')
