@@ -4,6 +4,9 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
+import { MailerService } from '@nestjs-modules/mailer';
+
+import { EmailContext } from '@/common/email-context.interface';
 
 import { User } from './schemas/user.schema';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -28,6 +31,8 @@ export class AccountsService {
     private readonly activationTokenModel: Model<ActivationToken>,
 
     private readonly configService: ConfigService,
+
+    private readonly mailerService: MailerService,
   ) {}
 
   async getAuthorizationToken({ email, password }: Credentials): Promise<string> {
@@ -113,6 +118,27 @@ export class AccountsService {
       email: user.email,
       isActive: false,
       passwordHash,
+    });
+  }
+
+  async sendActivationEmail(
+    activationToken: ActivationToken,
+    user: User,
+  ): Promise<void> {
+    const context :EmailContext = {
+      helloMessage: user.name,
+      message: `Seja bem vindo à PLAAD! Clique no botão abaixo para confirmar seu email:`,
+      cta: {
+        text: 'Confirmar email',
+        href: `http://localhost:3000/accounts/activate?token=${activationToken.value}`,
+      },
+    }
+    this.mailerService.sendMail({
+      to: user.email,
+      from: 'PLAAD <no-reply@plaad.com.br',
+      subject: 'Activate account',
+      template: 'generic',
+      context,
     });
   }
 }

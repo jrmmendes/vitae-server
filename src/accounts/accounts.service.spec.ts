@@ -5,16 +5,20 @@ import { Model } from 'mongoose';
 import * as faker from 'faker/locale/pt_BR';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
+import { MailerService, MailerModule } from '@nestjs-modules/mailer';
+
 import { AccountsService } from './accounts.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from './schemas/user.schema';
 import { ActivationToken } from './schemas/token.schema';
-import {ConfigModule} from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 describe('Accounts Service', () => {
   let service: AccountsService;
   let userModel: Model<User>;
   let activationTokenModel: Model<ActivationToken>;
+  let mailerService: MailerService;
+  let configService: ConfigService;
 
   const getTestUser = (): User => ({
     _id: faker.random.alphaNumeric(13),
@@ -29,9 +33,11 @@ describe('Accounts Service', () => {
         ConfigModule.forRoot({
           isGlobal: true,
         }),
+        MailerModule.forRoot(),
       ],
       providers: [
         AccountsService,
+        ConfigService,
         {
           provide: getModelToken('User'),
           useValue: {
@@ -50,11 +56,16 @@ describe('Accounts Service', () => {
           }
         }
       ]
-    }).compile();
+    })
+    .overrideProvider(MailerService)
+    .useValue({ sendMail: jest.fn() })
+    .compile();
 
     service = module.get<AccountsService>(AccountsService);
     userModel = module.get<Model<User>>(getModelToken('User'));
     activationTokenModel = module.get<Model<ActivationToken>>(getModelToken('ActivationToken'));
+    mailerService = module.get<MailerService>(MailerService);
+    configService = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {
@@ -62,6 +73,32 @@ describe('Accounts Service', () => {
   });
 
   describe('User Creation', () => {
+    it('When user created, expect to send activation email with valid activation link', async () => {
+      const testToken = {
+        _id: faker.random.alphaNumeric(13),
+        value: faker.random.alphaNumeric(13),
+        hasBeenUsed: false,
+      } as ActivationToken;
+
+      const testUser = getTestUser();
+
+      await service.sendActivationEmail(testToken, testUser);
+
+      expect(mailerService.sendMail).toBeCalledWith({
+        to: testUser.email,
+        from: 'PLAAD <no-reply@plaad.com.br',
+        subject: 'Activate account',
+        template: 'generic',
+        context: {
+          helloMessage: testUser.name,
+          message: `Seja bem vindo à PLAAD! Clique no botão abaixo para confirmar seu email:`,
+          cta: {
+            text: 'Confirmar email',
+            href: `http://localhost:3000/accounts/activate?token=${testToken.value}`,
+          },
+        }
+      });
+    });
     it('When input data is valid, expect to create the user', async () => {
       const testPassword = faker.internet.password(12);
       const data: RegisterUserDto = {

@@ -21,6 +21,14 @@ export class AccountsController {
       .accountsService
       .registerUser(registerUserDTO);
 
+    const activationToken = await this
+      .accountsService
+      .getActivationToken(user.id);
+    
+    this
+      .accountsService
+      .sendActivationEmail(activationToken, user);
+
     return new UserDto(user);
   }
 
