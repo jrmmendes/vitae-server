@@ -41,7 +41,7 @@ export class AccountsService {
     if (!user) {
       throw new BadRequestException('Email or password is wrong');
     }
-    const hasValidCredentials = await compare(password, user?.passwordHash);
+    const hasValidCredentials = await compare(password, user.passwordHash);
     
     if (!hasValidCredentials) {
       throw new BadRequestException('Email or password is wrong');

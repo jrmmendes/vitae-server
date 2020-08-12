@@ -407,7 +407,22 @@ describe('Accounts Service', () => {
       done();
     });
 
-    it('When invalid credentials are provided, expect to throw error', async (done) => {
+    it('When wrong email is provided, expect to throw error', async (done) => {
+      const testCredentials = {
+        email: faker.internet.email(),
+        password: faker.internet.password(12, false),
+      };
+
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(null as any);
+
+      await expect(service.getAuthorizationToken(testCredentials))
+      .rejects
+      .toThrowError(new BadRequestException('Email or password is wrong'));
+      
+      done();
+    });
+
+    it('When wrong password is provided, expect to throw error', async (done) => {
       const testCredentials = {
         email: faker.internet.email(),
         password: faker.internet.password(12, false),
@@ -415,20 +430,20 @@ describe('Accounts Service', () => {
 
       const passwordHash = await hash(testCredentials.password, 10);
       const wrongPassword = '123';
-      const wrongEmail = 'wrong.email@email.com';
 
-      jest.spyOn(userModel, 'findOne').mockResolvedValue(null as any);
+      jest.spyOn(userModel, 'findOne').mockResolvedValue({
+        _id: faker.random.alphaNumeric(),
+        name: faker.name.findName(),
+        email: testCredentials.email,
+        passwordHash,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
 
       await expect(service.getAuthorizationToken({
         email: testCredentials.email,
         password: wrongPassword,
-      }))
-      .rejects
-      .toThrowError(new BadRequestException('Email or password is wrong'));
-
-      await expect(service.getAuthorizationToken({
-        email: wrongEmail,
-        password: testCredentials.password,
       }))
       .rejects
       .toThrowError(new BadRequestException('Email or password is wrong'));
