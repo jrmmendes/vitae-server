@@ -38,6 +38,9 @@ export class AccountsService {
 
   async getAuthorizationToken({ email, password }: Credentials): Promise<string> {
     const user = await this.userModel.findOne({ email, isActive: true });
+    if (!user) {
+      throw new BadRequestException('Email or password is wrong');
+    }
     const hasValidCredentials = await compare(password, user?.passwordHash);
     
     if (!hasValidCredentials) {

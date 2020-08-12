@@ -401,10 +401,40 @@ describe('Accounts Service', () => {
       } as any);
 
       const jwt = await service.getAuthorizationToken(testCredentials);
+      const jwtRegex = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/;
 
-      expect(jwt).toMatch(/^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/);
+      expect(jwt).toMatch(jwtRegex);
       done();
     });
+
+    it('When invalid credentials are provided, expect to throw error', async (done) => {
+      const testCredentials = {
+        email: faker.internet.email(),
+        password: faker.internet.password(12, false),
+      };
+
+      const passwordHash = await hash(testCredentials.password, 10);
+      const wrongPassword = '123';
+      const wrongEmail = 'wrong.email@email.com';
+
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(null as any);
+
+      await expect(service.getAuthorizationToken({
+        email: testCredentials.email,
+        password: wrongPassword,
+      }))
+      .rejects
+      .toThrowError(new BadRequestException('Email or password is wrong'));
+
+      await expect(service.getAuthorizationToken({
+        email: wrongEmail,
+        password: testCredentials.password,
+      }))
+      .rejects
+      .toThrowError(new BadRequestException('Email or password is wrong'));
+
+      done();
+    })
   });
 });
 
