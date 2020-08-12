@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
@@ -19,22 +18,22 @@ import { AccountsModule } from './accounts/accounts.module';
       transport: {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: false,
+        secure: false, // true for 465, false for other ports
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: process.env.SMTP_USER, // generated ethereal user
+          pass: process.env.SMTP_PASS // generated ethereal password
         },
-        defaults: {
-          from: '"Vitae | Dev Resumes" <vitae-platform@gmail.com>',
+      },
+      defaults: {
+        from: '"PLAAD" <no-reply@plaad.com>', // outgoing email ID
+      },
+      template: {
+        dir: process.cwd() + '/templates/',
+        adapter: new HandlebarsAdapter(), // or new PugAdapter()
+        options: {
+          strict: true,
         },
-        template: {
-          dir: join(process.cwd(), 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        }
-      }
+      },
     }),
   ],
 })

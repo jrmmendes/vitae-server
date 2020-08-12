@@ -18,7 +18,6 @@ describe('Accounts Service', () => {
   let userModel: Model<User>;
   let activationTokenModel: Model<ActivationToken>;
   let mailerService: MailerService;
-  let configService: ConfigService;
 
   const getTestUser = (): User => ({
     _id: faker.random.alphaNumeric(13),
@@ -65,7 +64,6 @@ describe('Accounts Service', () => {
     userModel = module.get<Model<User>>(getModelToken('User'));
     activationTokenModel = module.get<Model<ActivationToken>>(getModelToken('ActivationToken'));
     mailerService = module.get<MailerService>(MailerService);
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {
@@ -99,6 +97,7 @@ describe('Accounts Service', () => {
         }
       });
     });
+
     it('When input data is valid, expect to create the user', async () => {
       const testPassword = faker.internet.password(12);
       const data: RegisterUserDto = {
@@ -224,6 +223,7 @@ describe('Accounts Service', () => {
 
       done();
     });
+
     it('When an already used token is passed, expect to throw Bad Request exception', async (done) => {
       const testUser = getTestUser();
 
@@ -407,3 +407,4 @@ describe('Accounts Service', () => {
     });
   });
 });
+

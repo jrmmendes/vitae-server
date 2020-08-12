@@ -1,5 +1,6 @@
 import { hash, compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
+
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -130,7 +131,7 @@ export class AccountsService {
       message: `Seja bem vindo à PLAAD! Clique no botão abaixo para confirmar seu email:`,
       cta: {
         text: 'Confirmar email',
-        href: `http://localhost:3000/accounts/activate?token=${activationToken.value}`,
+        href: `http://localhost:3000/accounts/activation?token=${activationToken.value}`,
       },
     }
     this.mailerService.sendMail({
