@@ -388,6 +388,8 @@ describe('Accounts Service', () => {
         password: faker.internet.password(12, false),
       };
 
+      process.env.APP_SECRET = 'test-secret';
+
       const passwordHash = await hash(testCredentials.password, 10);
 
       jest.spyOn(userModel, 'findOne').mockResolvedValue({

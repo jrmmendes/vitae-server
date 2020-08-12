@@ -5,7 +5,7 @@ import { INestApplication } from '@nestjs/common';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Test } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 
 import { AccountsModule } from '../src/accounts/accounts.module';
@@ -14,6 +14,7 @@ import { AccountsService } from '../src/accounts/accounts.service';
 describe('Accounts', () => {
   let app: INestApplication;
   let service: AccountsService;
+  let configService: ConfigService;
   let validTestUserData: any;
 
   beforeAll(async (done) => {
@@ -60,6 +61,8 @@ describe('Accounts', () => {
       email: faker.internet.email(),
       password: "m3$3jdiii32-asdasd",
     }
+
+    process.env.APP_SECRET = 'test-secret';
 
     const testUser = await service.registerUser({
       name: faker.name.findName(),
