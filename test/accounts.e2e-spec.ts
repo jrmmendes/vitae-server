@@ -1,10 +1,12 @@
 import * as request from 'supertest';
 import * as faker from 'faker/locale/pt_BR';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+
 import { INestApplication } from '@nestjs/common';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Test } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 
 import { AccountsModule } from '../src/accounts/accounts.module';
 import { AccountsService } from '../src/accounts/accounts.service';
@@ -29,9 +31,13 @@ describe('Accounts', () => {
               uri: uri
             }
           },
-        })
+        }),
+        MailerModule.forRoot(),
       ],
-    }).compile();
+    })
+    .overrideProvider(MailerService)
+    .useValue({ sendMail: jest.fn() })
+    .compile();
 
     app = module.createNestApplication();
     service = module.get<AccountsService>(AccountsService);
