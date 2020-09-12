@@ -92,7 +92,7 @@ describe('Accounts Service', () => {
           message: `Seja bem vindo à PLAAD! Clique no botão abaixo para confirmar seu email:`,
           cta: {
             text: 'Confirmar email',
-            href: `http://localhost:3000/accounts/activation?token=${testToken.value}`,
+            href: `http://localhost:3000/users/activation?token=${testToken.value}`,
           },
         }
       });
