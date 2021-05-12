@@ -34,7 +34,7 @@
     "handlebars": "^4.7.6",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.19",
-    "nodemailer": "^6.4.10",
+    "nodemailer": "^6.4.16",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.4",
