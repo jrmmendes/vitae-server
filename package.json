@@ -32,7 +32,7 @@
     "class-transformer": "^0.3.1",
     "class-validator": "^0.12.2",
     "handlebars": "^4.7.6",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^5.9.19",
     "nodemailer": "^6.4.10",
     "reflect-metadata": "^0.1.13",
